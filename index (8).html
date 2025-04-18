@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Offline Venues Management</title>
+  <!-- Include Firebase SDK (compat versions for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Google Fonts (Poppins) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap">
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+    /* Background and layout */
+    body {
+      background: url("background.png") no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;              
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1.site-title {
+      color: #fff;
+      font-size: 2rem;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 900px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin-bottom: 40px;
+      transition: box-shadow 0.3s ease;
+    }
+    .card:hover {
+      box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+    }
+    h2 {
+      margin-bottom: 15px;
+      color: #333;
+      font-weight: 600;
+      text-align: center;
+    }
+    .form-section,
+    .dashboard {
+      margin-bottom: 30px;
+    }
+    .form-section form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    form label {
+      display: block;
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    /* Input fields styling */
+    select,
+    input[type="text"],
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    select:focus,
+    input:focus {
+      border-color: #00a9dc;
+    }
+    /* Custom select arrow */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: url('icon-arrow.svg') no-repeat 95% center / 16px 16px, #fff;
+      padding-right: 2.5rem;
+    }
+    select::-ms-expand {
+      display: none;
+    }
+    button {
+      padding: 12px 24px;
+      background-color: #00c2ff;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      font-weight: 500;
+      align-self: flex-start;
+    }
+    button:hover {
+      background-color: #00a9dc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .dashboard {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #eee;
+      padding: 12px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    th {
+      background-color: #f7f7f7;
+      color: #333;
+      font-weight: 600;
+    }
+    tbody tr:hover {
+      background-color: #f1faff;
+    }
+    a {
+      color: #00c2ff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    /* Progress bar styles */
+    .progress-container {
+      width: 100px;
+      height: 10px;
+      background-color: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 0 auto 4px auto;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background-color: #00c2ff;
+      width: 0%;
+      transition: width 0.5s linear;
+    }
+    .time-text {
+      font-size: 0.85rem;
+      color: #555;
+    }
+    /* Button class for table actions */
+    .btn {
+      padding: 6px 12px;
+      background-color: #00c2ff;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-right: 5px;
+    }
+    .btn:hover {
+      background-color: #00a9dc;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="site-title">Offline Venues Management</h1>
+  <div class="card">
+    <!-- Form Section -->
+    <div class="form-section">
+      <h2>Set Venue to Admins Only</h2>
+      <form id="addEstablishmentForm">
+        <label>Your e-mail:</label>
+        <input type="text" id="addedBy" required>
+        <label>Venue Name:</label>
+        <input type="text" id="name" required>
+        <label>Venue page URL:</label>
+        <input type="url" id="url" required>
+        <label>Offline time (in minutes):</label>
+        <input type="number" id="offlineTime" required min="1">
+        <label>Reason for Offline:</label>
+        <select id="reason" required>
+          <option value="" disabled selected>Select reason</option>
+          <option value="Integration issues / Tech issues">Integration issues / Tech issues</option>
+          <option value="Venue sets itself online">Venue sets itself online</option>
+        </select>
+        <button type="submit">Add venue</button>
+      </form>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dashboard">
+      <h2>Active Venues</h2>
+      <table id="activeTable">
+        <thead>
+          <tr>
+            <th>Venue Name</th>
+            <th>Added By</th>
+            <th>Reason</th>
+            <th>URL</th>
+            <th>Time Left</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Active venues will be rendered here -->
+        </tbody>
+      </table>
+      
+      <h2>History</h2>
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th>Venue Name</th>
+            <th>Added By</th>
+            <th>Reason</th>
+            <th>URL</th>
+            <th>Offline Until</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Expired venues will be rendered here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ----------------- 1) Firebase initialization -----------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyBaQYzQmld5VNA_wSI8nDtqENN0TgcNqeA",
+      authDomain: "adminsonly.firebaseapp.com",
+      databaseURL: "https://adminsonly-default-rtdb.firebaseio.com",
+      projectId: "adminsonly",
+      storageBucket: "adminsonly.firebasestorage.app",
+      messagingSenderId: "194528429901",
+      appId: "1:194528429901:web:805ca2f1dd0feca2de1904"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ----------------- 2) Webhook URLs -----------------
+    const restaurantWebhookURL = "https://hooks.slack.com/triggers/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";
+    const simoWebhookURL = "https://hooks.slack.com/triggers/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";
+
+    // ----------------- 3) Functions to send notifications -----------------
+    // Для ресторана отправляем уведомление только при добавлении заведения
+    function sendRestaurantNotification(message) {
+      fetch(restaurantWebhookURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: message })
+      })
+      .then(() => console.log("Restaurant notification sent."))
+      .catch(err => console.error("Restaurant webhook error:", err));
+    }
+
+    // Для SIMO отправляем все подробные уведомления
+    function sendSimoNotification(message) {
+      // Если необходимо, можно дополнительно обработать сообщение (например, заменить переводы строки)
+      const plainMessage = message.replace(/\n/g, " | ");
+      fetch(simoWebhookURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: plainMessage })
+      })
+      .then(() => console.log("SIMO notification sent."))
+      .catch(err => console.error("SIMO webhook error:", err));
+    }
+
+    // ----------------- 4) Add Venue Function -----------------
+    function addEstablishment(establishment) {
+      const newRef = db.ref("establishments").push();
+      establishment.id = newRef.key;
+      establishment.createdAt = new Date().toISOString();
+      establishment.graceExpiresAt = null;
+      establishment.expired = false;
+      establishment.extraTimeAdded = false;
+      
+      newRef.set(establishment, error => {
+        if (!error) {
+          const restaurantMsg = `📢 The ${establishment.name} venue was set admins only until ${new Date(establishment.offlineUntil).toLocaleString()} by ${establishment.addedBy}\nReason: ${establishment.reason}. For further updates please, use https://wo.lt/adminsonly`;
+          const simoMsg = `🍽️ [SIMO] Venue: ${establishment.name} is set admins only until ${new Date(establishment.offlineUntil).toLocaleString()}\n🔗 URL: ${establishment.url}\nReason: ${establishment.reason}\nBy: ${establishment.addedBy}`;
+          
+          // Отправляем уведомление для ресторана только при создании записи
+          sendRestaurantNotification(restaurantMsg);
+          // И подробное уведомление для SIMO
+          sendSimoNotification(simoMsg);
+        } else {
+          console.error("Save error:", error);
+        }
+      });
+    }
+
+    // ----------------- 5) Global store -----------------
+    let currentEstablishments = [];
+
+    // ----------------- 6) Subscribe to DB updates -----------------
+    function subscribeToDashboard() {
+      db.ref("establishments").on("value", snapshot => {
+        const data = snapshot.val();
+        const allEstablishments = data ? Object.values(data) : [];
+        currentEstablishments = allEstablishments;
+        renderDashboards(allEstablishments);
+      });
+    }
+
+    // ----------------- 7) Render Dashboards -----------------
+    function renderDashboards(establishments) {
+      const activeTbody = document.getElementById("activeTable").querySelector("tbody");
+      const historyTbody = document.getElementById("historyTable").querySelector("tbody");
+      
+      activeTbody.innerHTML = "";
+      historyTbody.innerHTML = "";
+      let activeCount = 0;
+      
+      establishments.forEach(est => {
+        if (est.expired) {
+          // Отрисовка истории
+          const tr = document.createElement("tr");
+          
+          const tdName = document.createElement("td");
+          tdName.textContent = est.name;
+          tr.appendChild(tdName);
+          
+          const tdBy = document.createElement("td");
+          tdBy.textContent = est.addedBy || "";
+          tr.appendChild(tdBy);
+          
+          const tdReason = document.createElement("td");
+          tdReason.textContent = est.reason || "";
+          tr.appendChild(tdReason);
+          
+          const tdUrl = document.createElement("td");
+          const link = document.createElement("a");
+          link.href = est.url;
+          link.target = "_blank";
+          link.textContent = "Link";
+          tdUrl.appendChild(link);
+          tr.appendChild(tdUrl);
+          
+          const tdOffline = document.createElement("td");
+          tdOffline.textContent = new Date(est.offlineUntil).toLocaleString();
+          tr.appendChild(tdOffline);
+          
+          historyTbody.appendChild(tr);
+        } else {
+          activeCount++;
+          // Отрисовка активных записей
+          const tr = document.createElement("tr");
+          
+          const tdName = document.createElement("td");
+          tdName.textContent = est.name;
+          tr.appendChild(tdName);
+          
+          const tdBy = document.createElement("td");
+          tdBy.textContent = est.addedBy || "";
+          tr.appendChild(tdBy);
+          
+          const tdReason = document.createElement("td");
+          tdReason.textContent = est.reason || "";
+          tr.appendChild(tdReason);
+          
+          const tdUrl = document.createElement("td");
+          const link = document.createElement("a");
+          link.href = est.url;
+          link.target = "_blank";
+          link.textContent = "Link";
+          tdUrl.appendChild(link);
+          tr.appendChild(tdUrl);
+          
+          // Ячейка с прогресс-баром и оставшимся временем
+          const tdTimer = document.createElement("td");
+          tdTimer.style.verticalAlign = "middle";
+          const progressContainer = document.createElement("div");
+          progressContainer.className = "progress-container";
+          progressContainer.id = `progressBar-${est.id}`;
+          const progressFill = document.createElement("div");
+          progressFill.className = "progress-fill";
+          progressFill.id = `progressFill-${est.id}`;
+          progressContainer.appendChild(progressFill);
+          const timeText = document.createElement("div");
+          timeText.className = "time-text";
+          timeText.id = `timeText-${est.id}`;
+          tdTimer.appendChild(progressContainer);
+          tdTimer.appendChild(timeText);
+          tr.appendChild(tdTimer);
+          
+          // Ячейка с кнопками
+          const tdAction = document.createElement("td");
+          tdAction.style.display = "flex";
+          tdAction.style.flexDirection = "column";
+          tdAction.style.gap = "8px";
+          
+          const addTimeBtn = document.createElement("button");
+          addTimeBtn.textContent = "Add Extra Time";
+          addTimeBtn.className = "btn";
+          addTimeBtn.addEventListener("click", () => addExtraTime(est.id));
+          tdAction.appendChild(addTimeBtn);
+          
+          if (est.graceExpiresAt) {
+            const setExpBtn = document.createElement("button");
+            setExpBtn.textContent = "Set Expired";
+            setExpBtn.className = "btn";
+            setExpBtn.style.backgroundColor = "#dc3545";
+            setExpBtn.style.marginTop = "5px";
+            setExpBtn.addEventListener("click", () => setExpiredNow(est.id));
+            tdAction.appendChild(setExpBtn);
+          }
+          tr.appendChild(tdAction);
+          activeTbody.appendChild(tr);
+        }
+      });
+      
+      if (activeCount === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.textContent = "No active venues";
+        tr.appendChild(td);
+        activeTbody.appendChild(tr);
+      }
+    }
+
+    // ----------------- 8) Update timers, grace period, and progress bar -----------------
+    function updateTimers() {
+      const now = Date.now();
+      
+      currentEstablishments.forEach(est => {
+        if (est.expired) return;
+        const progressBar = document.getElementById(`progressBar-${est.id}`);
+        const progressFill = document.getElementById(`progressFill-${est.id}`);
+        const timeTextEl = document.getElementById(`timeText-${est.id}`);
+        if (!progressBar || !progressFill || !timeTextEl) return;
+        
+        const offlineUntilTime = new Date(est.offlineUntil).getTime();
+        const createdTime = new Date(est.createdAt).getTime();
+        
+        if (offlineUntilTime > now) {
+          const remainingMs = offlineUntilTime - now;
+          const totalMs = offlineUntilTime - createdTime;
+          let ratio = remainingMs / totalMs;
+          if (ratio < 0) ratio = 0;
+          if (ratio > 1) ratio = 1;
+          progressFill.style.backgroundColor = "#00c2ff";
+          progressFill.style.width = (ratio * 100) + "%";
+          const m = Math.floor(remainingMs / 60000);
+          const s = Math.floor((remainingMs % 60000) / 1000);
+          timeTextEl.textContent = `${m} min ${s} sec`;
+        } else {
+          if (est.extraTimeAdded) {
+            db.ref("establishments/" + est.id).update({ expired: true }, err => {
+              if (!err) {
+                sendSimoNotification(`🍽️ [SIMO] ${est.name} expired immediately after extra time. URL: ${est.url} | By: ${est.addedBy}`);
+              }
+            });
+          } else {
+            if (!est.graceExpiresAt) {
+              const graceExpires = new Date(now + 10 * 60 * 1000).toISOString();
+              db.ref("establishments/" + est.id).update({ graceExpiresAt: graceExpires });
+              sendSimoNotification(`🍽️ [SIMO] ${est.name} offline expired. Grace period (10 min) started. URL: ${est.url} | By: ${est.addedBy}`);
+              est.graceExpiresAt = graceExpires;
+              progressFill.style.backgroundColor = "#ffc107";
+              progressFill.style.width = "100%";
+              timeTextEl.textContent = "Grace: 10 min 0 sec";
+            } else {
+              const graceExpiresTime = new Date(est.graceExpiresAt).getTime();
+              const graceRemaining = graceExpiresTime - now;
+              if (graceRemaining > 0) {
+                const mm = Math.floor(graceRemaining / 60000);
+                const ss = Math.floor((graceRemaining % 60000) / 1000);
+                progressFill.style.backgroundColor = "#ffc107";
+                progressFill.style.width = ((graceRemaining / (10 * 60 * 1000)) * 100) + "%";
+                timeTextEl.textContent = `Grace: ${mm} min ${ss} sec`;
+              } else {
+                db.ref("establishments/" + est.id).update({ expired: true }, error => {
+                  if (!error) {
+                    sendSimoNotification(`🍽️ [SIMO] ${est.name} fully expired. URL: ${est.url} | By: ${est.addedBy}`);
+                  }
+                });
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ----------------- 9) Add Extra Time -----------------
+    function addExtraTime(id) {
+      const additionalTime = prompt("Enter additional time (in minutes):");
+      if (!additionalTime) return;
+      const ref = db.ref("establishments/" + id);
+      ref.once("value", snapshot => {
+        const est = snapshot.val();
+        if (!est) return;
+        const additionalMs = parseInt(additionalTime, 10) * 60 * 1000;
+        const newOfflineUntil = new Date(new Date(est.offlineUntil).getTime() + additionalMs);
+        ref.update({
+          offlineUntil: newOfflineUntil.toISOString(),
+          expired: false,
+          graceExpiresAt: null,
+          createdAt: new Date().toISOString(),
+          extraTimeAdded: true
+        }, error => {
+          if (!error) {
+            sendSimoNotification(`🍽️ [SIMO] Extra ${additionalTime} min added to ${est.name}. New offline until: ${newOfflineUntil.toLocaleString()} | URL: ${est.url} | By: ${est.addedBy}`);
+            db.ref("establishments").once("value", snap => {
+              const data = snap.val();
+              currentEstablishments = data ? Object.values(data) : [];
+              renderDashboards(currentEstablishments);
+            });
+          } else {
+            console.error("Update error:", error);
+          }
+        });
+      });
+    }
+
+    // ----------------- 10) Set Expired Now -----------------
+    function setExpiredNow(id) {
+      const ref = db.ref("establishments/" + id);
+      ref.update({ expired: true }, error => {
+        if (!error) {
+          ref.once("value", snap => {
+            const est = snap.val();
+            sendSimoNotification(`🍽️ [SIMO] ${est.name} marked as expired. URL: ${est.url} | By: ${est.addedBy}`);
+          });
+        }
+      });
+    }
+
+    // ----------------- 11) Initialization -----------------
+    window.addEventListener("load", () => {
+      subscribeToDashboard();
+      setInterval(updateTimers, 1000);
+    });
+
+    // ----------------- 12) Form Handling -----------------
+    document.getElementById("addEstablishmentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const addedBy = document.getElementById("addedBy").value;
+      const name = document.getElementById("name").value;
+      const url = document.getElementById("url").value;
+      const offlineTimeMinutes = parseInt(document.getElementById("offlineTime").value, 10);
+      const reason = document.getElementById("reason").value;
+      const now = new Date();
+      const offlineUntil = new Date(now.getTime() + offlineTimeMinutes * 60 * 1000);
+      const establishment = {
+        addedBy: addedBy,
+        name: name,
+        url: url,
+        offlineUntil: offlineUntil.toISOString(),
+        addedOfflineTime: offlineTimeMinutes,
+        reason: reason,
+        expired: false,
+        graceExpiresAt: null,
+        createdAt: now.toISOString(),
+        extraTimeAdded: false
+      };
+      addEstablishment(establishment);
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>
