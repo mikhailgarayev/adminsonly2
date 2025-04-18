@@ -1,133 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Offline Venues Management</title>
-  <!-- Include Firebase SDK (compat versions for simplicity) -->
+  <title>Admins Only Management Panel</title>
+  <!-- Firebase SDK (compat version) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <!-- Google Fonts (Poppins) -->
+  <!-- Google Fonts -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap">
   <style>
-    /* Сброс стилей и базовые настройки */
+    /* Сброс стилей и базовая настройка */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: 'Poppins', sans-serif;
     }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
     body {
-      background-image: url("background.png");
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 100% 100%;
-    }
-    h1.site-title {
-      color: #fff;
-      font-size: 2rem;
-      margin-top: 40px;
-      margin-bottom: 20px;
-      text-align: center;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 900px;
-      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-      padding: 30px;
-      margin-bottom: 40px;
-      transition: box-shadow 0.3s ease;
-    }
-    .card:hover {
-      box-shadow: 0 4px 25px rgba(0,0,0,0.15);
-    }
-    h2 {
-      margin-bottom: 15px;
-      color: #333;
-      font-weight: 600;
-      text-align: center;
-    }
-    /* Отделяем секцию с формой и секцию с таблицами */
-    .form-section,
-    .dashboard {
-      margin-bottom: 30px;
-    }
-    .form-section form {
+      background: #f9f9f9;
       display: flex;
       flex-direction: column;
-      gap: 10px;
     }
-    form label {
-      display: block;
-      color: #333;
-      font-weight: 500;
-      margin-bottom: 4px;
+    /* Верхняя панель с фоновым изображением */
+    .header {
+      height: 200px;
+      background: url("background.png") no-repeat center center;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      color: #fff;
+      position: relative;
     }
-    /* Стилизация полей ввода */
-    select,
-    input[type="text"],
-    input[type="url"],
-    input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.2s ease;
+    .header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4); /* затемнение для лучшей читаемости текста */
     }
-    select:focus,
-    input:focus {
-      border-color: #00a9dc;
+    .header h1 {
+      position: relative;
+      font-size: 1.6rem;
+      z-index: 1;
     }
-    /* Кастомная стрелка для select */
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: url('icon-arrow.svg') no-repeat 95% center / 16px 16px, #fff;
-      padding-right: 2.5rem;
-    }
-    select::-ms-expand {
-      display: none;
-    }
-    button {
-      padding: 12px 24px;
+    .header button {
+      position: relative;
+      z-index: 1;
       background-color: #00c2ff;
       border: none;
       border-radius: 8px;
       color: #fff;
       cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       font-weight: 500;
-      align-self: flex-start;
+      padding: 10px 20px;
+      transition: background-color 0.2s ease, transform 0.2s ease;
     }
-    button:hover {
+    .header button:hover {
       background-color: #00a9dc;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    button:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
-    /* Таблицы */
-    .dashboard table {
+    /* Основной контейнер */
+    .container {
+      max-width: 1200px;
       width: 100%;
-      border-collapse: collapse;
+      margin: -50px auto 20px auto; /* немного перекрываем верхнюю панель */
+      padding: 0 20px;
+      flex: 1;
+    }
+    /* Карточка для таблиц */
+    .card {
       background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      padding: 20px;
       margin-bottom: 20px;
     }
-    th, td {
-      border: 1px solid #eee;
-      padding: 12px 16px;
+    .card h2 {
+      margin-bottom: 15px;
       text-align: center;
+      color: #333;
+      position: relative;
+      display: inline-block;
+    }
+    .card h2::after {
+      content: "";
+      display: block;
+      width: 50%;
+      height: 3px;
+      background: #00c2ff;
+      margin: 5px auto 0 auto;
+      border-radius: 5px;
+    }
+    /* Таблицы */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
       font-size: 0.95rem;
+      color: #333;
     }
     th {
       background-color: #f7f7f7;
-      color: #333;
       font-weight: 600;
     }
     tbody tr:nth-child(even) {
@@ -156,7 +143,7 @@
     }
     .progress-fill {
       height: 100%;
-      background-color: #00c2ff; /* Синий для активного статуса */
+      background-color: #00c2ff;
       width: 0%;
       transition: width 0.5s ease;
     }
@@ -164,49 +151,84 @@
       font-size: 0.85rem;
       color: #555;
     }
-    /* Кнопки в таблице */
-    .btn {
-      padding: 6px 12px;
+    /* Модальное окно: оверлей и окно */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .modal.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .modal h2 {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .modal form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal label {
+      font-weight: 500;
+      color: #333;
+    }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .modal button {
       background-color: #00c2ff;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       color: #fff;
       cursor: pointer;
-      font-size: 0.8rem;
-      margin-right: 5px;
+      font-weight: 500;
+      padding: 10px 16px;
+      transition: background-color 0.2s ease, transform 0.2s ease;
     }
-    .btn:hover {
+    .modal button:hover {
       background-color: #00a9dc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
   </style>
 </head>
 <body>
-  <h1 class="site-title">Offline Venues Management</h1>
-  <div class="card">
-    <!-- Форма добавления заведения -->
-    <div class="form-section">
-      <h2>Set Venue to Admins Only</h2>
-      <form id="addEstablishmentForm">
-        <label>Your e-mail:</label>
-        <input type="text" id="addedBy" required>
-        <label>Venue Name:</label>
-        <input type="text" id="name" required>
-        <label>Venue page URL:</label>
-        <input type="url" id="url" required>
-        <label>Offline time (in minutes):</label>
-        <input type="number" id="offlineTime" required min="1">
-        <label>Reason for Offline:</label>
-        <select id="reason" required>
-          <option value="" disabled selected>Select reason</option>
-          <option value="Integration issues / Tech issues">Integration issues / Tech issues</option>
-          <option value="Venue sets itself online">Venue sets itself online</option>
-        </select>
-        <button type="submit">Add venue</button>
-      </form>
-    </div>
+  <!-- Верхняя панель -->
+  <div class="header">
+    <h1>Admins only management panel</h1>
+    <button id="openModalBtn">Add venue</button>
+  </div>
 
-    <!-- Таблицы -->
-    <div class="dashboard">
+  <!-- Основной контейнер с таблицами -->
+  <div class="container">
+    <div class="card">
       <h2>Active Venues</h2>
       <table id="activeTable">
         <thead>
@@ -220,7 +242,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Активные заведения будут здесь -->
+          <!-- Здесь будут активные заведения -->
         </tbody>
       </table>
       
@@ -236,14 +258,46 @@
           </tr>
         </thead>
         <tbody>
-          <!-- История (expired) заведений -->
+          <!-- Здесь будет история (expired) -->
         </tbody>
       </table>
     </div>
   </div>
 
+  <!-- Модальное окно (форма добавления заведения) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalWindow">
+      <h2>New Venue</h2>
+      <form id="addVenueForm">
+        <label>Your e-mail:</label>
+        <input type="text" id="modalAddedBy" required>
+
+        <label>Venue Name:</label>
+        <input type="text" id="modalName" required>
+
+        <label>Venue page URL:</label>
+        <input type="url" id="modalUrl" required>
+
+        <label>Offline time (in minutes):</label>
+        <input type="number" id="modalOfflineTime" required min="1">
+
+        <label>Reason for Offline:</label>
+        <select id="modalReason" required>
+          <option value="" disabled selected>Select reason</option>
+          <option value="Integration issues / Tech issues">Integration issues / Tech issues</option>
+          <option value="Venue sets itself online">Venue sets itself online</option>
+        </select>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelModalBtn">Cancel</button>
+          <button type="submit" id="submitVenueBtn">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // ----------------- 1) Firebase initialization -----------------
+    // ----------------- Firebase initialization -----------------
     const firebaseConfig = {
       apiKey: "AIzaSyBaQYzQmld5VNA_wSI8nDtqENN0TgcNqeA",
       authDomain: "adminsonly.firebaseapp.com",
@@ -256,12 +310,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ----------------- 2) Webhook URLs -----------------
+    // ----------------- Webhook URLs -----------------
     const restaurantWebhookURL = "https://hooks.slack.com/triggers/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";
     const simoWebhookURL = "https://hooks.slack.com/triggers/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";
 
-    // ----------------- 3) Functions to send notifications -----------------
-    // Отправка уведомления для ресторанной команды (вызывается только при создании заведения)
+    // ----------------- Functions for sending notifications -----------------
+    // Для ресторанной команды отправляем уведомление только при добавлении заведения.
     function sendRestaurantNotification(message) {
       fetch(restaurantWebhookURL, {
         method: "POST",
@@ -272,9 +326,7 @@
       .then(() => console.log("Restaurant notification sent."))
       .catch(err => console.error("Restaurant webhook error:", err));
     }
-
-    // Отправка уведомления для SIMO (подробное уведомление для всех событий, кроме создания)
-    // Здесь перед отправкой заменяем переводы строк на разделитель, чтобы избежать ошибок invalid blocks
+    // Для SIMO отправляем подробные уведомления (заменяем переводы строк на " | ").
     function sendSimoNotification(message) {
       const plainMessage = message.replace(/\n/g, " | ");
       fetch(simoWebhookURL, {
@@ -287,7 +339,7 @@
       .catch(err => console.error("SIMO webhook error:", err));
     }
 
-    // ----------------- 4) Add Venue Function -----------------
+    // -----------------  Add Venue Function -----------------
     function addEstablishment(establishment) {
       const newRef = db.ref("establishments").push();
       establishment.id = newRef.key;
@@ -298,12 +350,11 @@
       
       newRef.set(establishment, error => {
         if (!error) {
+          // При добавлении заведения уведомление для ресторана
           const restaurantMsg = `📢 The ${establishment.name} venue was set admins only until ${new Date(establishment.offlineUntil).toLocaleString()} by ${establishment.addedBy}\nReason: ${establishment.reason}. For further updates please, use https://wo.lt/adminsonly`;
+          // И подробное уведомление для SIMO
           const simoMsg = `🍽️ [SIMO] Venue: ${establishment.name} is set admins only until ${new Date(establishment.offlineUntil).toLocaleString()}\n🔗 URL: ${establishment.url}\nReason: ${establishment.reason}\nBy: ${establishment.addedBy}`;
-          
-          // Отправляем уведомление в ресторанный канал только при создании
           sendRestaurantNotification(restaurantMsg);
-          // И подробное уведомление в SIMO
           sendSimoNotification(simoMsg);
         } else {
           console.error("Save error:", error);
@@ -311,19 +362,20 @@
       });
     }
 
-    // ----------------- 5) Global store -----------------
+    // ----------------- Global store -----------------
     let currentEstablishments = [];
 
-    // ----------------- 6) Subscribe to DB updates -----------------
+    // ----------------- Subscribe to DB updates -----------------
     function subscribeToDashboard() {
       db.ref("establishments").on("value", snapshot => {
         const data = snapshot.val();
-        currentEstablishments = data ? Object.values(data) : [];
-        renderDashboards(currentEstablishments);
+        const allEstablishments = data ? Object.values(data) : [];
+        currentEstablishments = allEstablishments;
+        renderDashboards(allEstablishments);
       });
     }
 
-    // ----------------- 7) Render Dashboards -----------------
+    // ----------------- Render Dashboards -----------------
     function renderDashboards(establishments) {
       const activeTbody = document.getElementById("activeTable").querySelector("tbody");
       const historyTbody = document.getElementById("historyTable").querySelector("tbody");
@@ -331,23 +383,20 @@
       activeTbody.innerHTML = "";
       historyTbody.innerHTML = "";
       let activeCount = 0;
+      
       establishments.forEach(est => {
         if (est.expired) {
-          // Рендерим записи для History
+          // Рендерим историю
           const tr = document.createElement("tr");
-          
           const tdName = document.createElement("td");
           tdName.textContent = est.name;
           tr.appendChild(tdName);
-          
           const tdBy = document.createElement("td");
           tdBy.textContent = est.addedBy || "";
           tr.appendChild(tdBy);
-          
           const tdReason = document.createElement("td");
           tdReason.textContent = est.reason || "";
           tr.appendChild(tdReason);
-          
           const tdUrl = document.createElement("td");
           const link = document.createElement("a");
           link.href = est.url;
@@ -355,29 +404,23 @@
           link.textContent = "Link";
           tdUrl.appendChild(link);
           tr.appendChild(tdUrl);
-          
           const tdOffline = document.createElement("td");
           tdOffline.textContent = new Date(est.offlineUntil).toLocaleString();
           tr.appendChild(tdOffline);
-          
           historyTbody.appendChild(tr);
         } else {
           activeCount++;
-          // Рендерим активные записи
+          // Рендерим активные заведения
           const tr = document.createElement("tr");
-          
           const tdName = document.createElement("td");
           tdName.textContent = est.name;
           tr.appendChild(tdName);
-          
           const tdBy = document.createElement("td");
           tdBy.textContent = est.addedBy || "";
           tr.appendChild(tdBy);
-          
           const tdReason = document.createElement("td");
           tdReason.textContent = est.reason || "";
           tr.appendChild(tdReason);
-          
           const tdUrl = document.createElement("td");
           const link = document.createElement("a");
           link.href = est.url;
@@ -385,8 +428,8 @@
           link.textContent = "Link";
           tdUrl.appendChild(link);
           tr.appendChild(tdUrl);
-          
-          // Ячейка с прогресс-баром и оставшимся временем
+
+          // Прогресс-бар и оставшееся время
           const tdTimer = document.createElement("td");
           tdTimer.style.verticalAlign = "middle";
           const progressContainer = document.createElement("div");
@@ -403,18 +446,16 @@
           tdTimer.appendChild(timeText);
           tr.appendChild(tdTimer);
           
-          // Ячейка с кнопками действий
+          // Кнопки действий
           const tdAction = document.createElement("td");
           tdAction.style.display = "flex";
           tdAction.style.flexDirection = "column";
           tdAction.style.gap = "8px";
-          
           const addTimeBtn = document.createElement("button");
           addTimeBtn.textContent = "Add Extra Time";
           addTimeBtn.className = "btn";
           addTimeBtn.addEventListener("click", () => addExtraTime(est.id));
           tdAction.appendChild(addTimeBtn);
-          
           if (est.graceExpiresAt) {
             const setExpBtn = document.createElement("button");
             setExpBtn.textContent = "Set Expired";
@@ -424,7 +465,6 @@
             setExpBtn.addEventListener("click", () => setExpiredNow(est.id));
             tdAction.appendChild(setExpBtn);
           }
-          
           tr.appendChild(tdAction);
           activeTbody.appendChild(tr);
         }
@@ -450,7 +490,6 @@
         const progressBar = document.getElementById(`progressBar-${est.id}`);
         const progressFill = document.getElementById(`progressFill-${est.id}`);
         const timeTextEl = document.getElementById(`timeText-${est.id}`);
-        
         if (!progressBar || !progressFill || !timeTextEl) return;
         
         const offlineUntilTime = new Date(est.offlineUntil).getTime();
@@ -550,21 +589,40 @@
       });
     }
 
-    // ----------------- 11) Initialization -----------------
-    window.addEventListener("load", () => {
-      subscribeToDashboard();
-      setInterval(updateTimers, 1000);
+    // ----------------- 11) Modal Window (Open/Close) -----------------
+    const openModalBtn = document.getElementById("openModalBtn");
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalWindow = document.getElementById("modalWindow");
+    const cancelModalBtn = document.getElementById("cancelModalBtn");
+    const addVenueForm = document.getElementById("addVenueForm");
+
+    openModalBtn.addEventListener("click", () => {
+      modalOverlay.style.display = "flex";
+      setTimeout(() => {
+        modalWindow.classList.add("show");
+      }, 10);
     });
 
-    // ----------------- 12) Form Handling -----------------
-    document.getElementById("addEstablishmentForm").addEventListener("submit", function(e) {
+    cancelModalBtn.addEventListener("click", closeModal);
+
+    function closeModal() {
+      modalWindow.classList.remove("show");
+      setTimeout(() => {
+        modalOverlay.style.display = "none";
+      }, 300);
+    }
+
+    // ----------------- 12) Handle Modal Form submission -----------------
+    addVenueForm.addEventListener("submit", function(e) {
       e.preventDefault();
       
-      const addedBy = document.getElementById("addedBy").value;
-      const name = document.getElementById("name").value;
-      const url = document.getElementById("url").value;
-      const offlineTimeMinutes = parseInt(document.getElementById("offlineTime").value, 10);
-      const reason = document.getElementById("reason").value;
+      // Считываем данные из полей модального окна (обратите внимание, разные id, чтобы не конфликтовали с основной формой)
+      const addedBy = document.getElementById("modalAddedBy").value;
+      const name = document.getElementById("modalName").value;
+      const url = document.getElementById("modalUrl").value;
+      const offlineTimeMinutes = parseInt(document.getElementById("modalOfflineTime").value, 10);
+      const reason = document.getElementById("modalReason").value;
+      
       const now = new Date();
       const offlineUntil = new Date(now.getTime() + offlineTimeMinutes * 60 * 1000);
       
@@ -582,7 +640,14 @@
       };
       
       addEstablishment(establishment);
-      e.target.reset();
+      closeModal();
+      addVenueForm.reset();
+    });
+
+    // ----------------- 13) Initialization -----------------
+    window.addEventListener("load", () => {
+      subscribeToDashboard();
+      setInterval(updateTimers, 1000);
     });
   </script>
 </body>
