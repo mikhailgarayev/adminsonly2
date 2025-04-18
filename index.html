@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Admins Only Management Panel</title>
-  <!-- Firebase SDK (compat version) -->
+  <!-- Если используете Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  
   <!-- Google Fonts -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap">
+  
   <style>
-    /* Сброс стилей и базовая настройка */
+    /* Сброс и базовая настройка */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -20,97 +22,77 @@
       width: 100%;
       min-height: 100vh;
     }
+    /* Фоновое изображение на весь экран */
     body {
-      background: #f9f9f9;
+      background: url("background.png") no-repeat center center fixed;
+      background-size: cover;      /* Изображение растягивается, сохраняя пропорции */
       display: flex;
       flex-direction: column;
     }
-    /* Верхняя панель с фоновым изображением */
-    .header {
-      height: 200px;
-      background: url("background.png") no-repeat center center;
-      background-size: cover;
+    /* Верхняя панель (header) */
+    .top-bar {
+      height: 60px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 20px;
-      color: #fff;
-      position: relative;
     }
-    .header::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4); /* затемнение для лучшей читаемости текста */
+    .top-bar h1 {
+      font-size: 1.2rem;
+      color: #333;
     }
-    .header h1 {
-      position: relative;
-      font-size: 1.6rem;
-      z-index: 1;
-    }
-    .header button {
-      position: relative;
-      z-index: 1;
+    .top-bar button {
       background-color: #00c2ff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       color: #fff;
       cursor: pointer;
       font-weight: 500;
-      padding: 10px 20px;
+      padding: 10px 16px;
       transition: background-color 0.2s ease, transform 0.2s ease;
     }
-    .header button:hover {
+    .top-bar button:hover {
       background-color: #00a9dc;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    /* Основной контейнер */
+    /* Основная обёртка */
     .container {
       max-width: 1200px;
       width: 100%;
-      margin: -50px auto 20px auto; /* немного перекрываем верхнюю панель */
+      margin: 20px auto;
       padding: 0 20px;
-      flex: 1;
     }
-    /* Карточка для таблиц */
+    /* Карточка под таблицы */
     .card {
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
       padding: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     .card h2 {
-      margin-bottom: 15px;
-      text-align: center;
+      margin-bottom: 10px;
       color: #333;
-      position: relative;
-      display: inline-block;
-    }
-    .card h2::after {
-      content: "";
-      display: block;
-      width: 50%;
-      height: 3px;
-      background: #00c2ff;
-      margin: 5px auto 0 auto;
-      border-radius: 5px;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
     /* Таблицы */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
-      background: #fff;
       border-radius: 8px;
       overflow: hidden;
+      margin-bottom: 20px;
+      background: #fff;
     }
     th, td {
       padding: 12px 16px;
-      text-align: left;
       border-bottom: 1px solid #eee;
       font-size: 0.95rem;
+      text-align: left;
       color: #333;
     }
     th {
@@ -118,56 +100,27 @@
       font-weight: 600;
     }
     tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
+      background-color: #f9f9f9; /* полосатые строки */
     }
     tbody tr:hover {
-      background-color: #e6f7ff;
+      background-color: #e6f7ff; /* hover-эффект */
     }
-    a {
-      color: #00c2ff;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    /* Прогресс-бар */
-    .progress-container {
-      width: 100px;
-      height: 10px;
-      background-color: #ddd;
-      border-radius: 5px;
-      overflow: hidden;
-      margin: 0 auto 4px auto;
-      position: relative;
-    }
-    .progress-fill {
-      height: 100%;
-      background-color: #00c2ff;
-      width: 0%;
-      transition: width 0.5s ease;
-    }
-    .time-text {
-      font-size: 0.85rem;
-      color: #555;
-    }
-    /* Модальное окно: оверлей и окно */
+    /* Модальное окно */
     .modal-overlay {
       position: fixed;
-      inset: 0;
+      inset: 0; /* top:0; left:0; right:0; bottom:0 */
       background: rgba(0,0,0,0.4);
-      display: none;
+      display: none; /* скрыто по умолчанию */
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 9999;
     }
     .modal {
       background: #fff;
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       width: 100%;
       max-width: 500px;
-      position: relative;
       opacity: 0;
       transform: translateY(30px);
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -177,8 +130,8 @@
       transform: translateY(0);
     }
     .modal h2 {
-      margin-bottom: 10px;
-      font-size: 1.2rem;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
       color: #333;
     }
     .modal form {
@@ -195,6 +148,8 @@
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 6px;
+      outline: none;
+      font-size: 0.9rem;
     }
     .modal-actions {
       display: flex;
@@ -220,13 +175,13 @@
   </style>
 </head>
 <body>
-  <!-- Верхняя панель -->
-  <div class="header">
+  <!-- Верхняя панель с текстом слева и кнопкой справа -->
+  <div class="top-bar">
     <h1>Admins only management panel</h1>
-    <button id="openModalBtn">Add venue</button>
+    <button id="addVenueBtn">Add venue</button>
   </div>
 
-  <!-- Основной контейнер с таблицами -->
+  <!-- Основной контейнер, где хранятся таблицы -->
   <div class="container">
     <div class="card">
       <h2>Active Venues</h2>
@@ -242,10 +197,20 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Здесь будут активные заведения -->
+          <!-- Активные заведения будут подставляться через JS -->
+          <tr>
+            <td>Sample Venue</td>
+            <td>john.doe@wolt.com</td>
+            <td>Integration issues / Tech issues</td>
+            <td>Link</td>
+            <td>5 min 30 sec</td>
+            <td>(Buttons here)</td>
+          </tr>
         </tbody>
       </table>
-      
+    </div>
+
+    <div class="card">
       <h2>History</h2>
       <table id="historyTable">
         <thead>
@@ -258,31 +223,38 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Здесь будет история (expired) -->
+          <!-- Истекшие заведения -->
+          <tr>
+            <td>Old Venue</td>
+            <td>mikhail.garayev@wolt.com</td>
+            <td>Venue sets itself online</td>
+            <td>Link</td>
+            <td>4/19/2025, 5:00 PM</td>
+          </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Модальное окно (форма добавления заведения) -->
+  <!-- Модальное окно: оверлей + диалог -->
   <div class="modal-overlay" id="modalOverlay">
-    <div class="modal" id="modalWindow">
+    <div class="modal" id="venueModal">
       <h2>New Venue</h2>
-      <form id="addVenueForm">
+      <form id="venueForm">
         <label>Your e-mail:</label>
-        <input type="text" id="modalAddedBy" required>
+        <input type="text" id="addedBy" required>
 
         <label>Venue Name:</label>
-        <input type="text" id="modalName" required>
+        <input type="text" id="name" required>
 
         <label>Venue page URL:</label>
-        <input type="url" id="modalUrl" required>
+        <input type="url" id="url" required>
 
         <label>Offline time (in minutes):</label>
-        <input type="number" id="modalOfflineTime" required min="1">
+        <input type="number" id="offlineTime" required min="1">
 
         <label>Reason for Offline:</label>
-        <select id="modalReason" required>
+        <select id="reason" required>
           <option value="" disabled selected>Select reason</option>
           <option value="Integration issues / Tech issues">Integration issues / Tech issues</option>
           <option value="Venue sets itself online">Venue sets itself online</option>
@@ -290,364 +262,58 @@
 
         <div class="modal-actions">
           <button type="button" id="cancelModalBtn">Cancel</button>
-          <button type="submit" id="submitVenueBtn">Submit</button>
+          <button type="submit" id="submitModalBtn">Submit</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    // ----------------- Firebase initialization -----------------
-    const firebaseConfig = {
-      apiKey: "AIzaSyBaQYzQmld5VNA_wSI8nDtqENN0TgcNqeA",
-      authDomain: "adminsonly.firebaseapp.com",
-      databaseURL: "https://adminsonly-default-rtdb.firebaseio.com",
-      projectId: "adminsonly",
-      storageBucket: "adminsonly.firebasestorage.app",
-      messagingSenderId: "194528429901",
-      appId: "1:194528429901:web:805ca2f1dd0feca2de1904"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // Пример: инициализация Firebase (если нужно)
+    // const firebaseConfig = { ... };
+    // firebase.initializeApp(firebaseConfig);
+    // const db = firebase.database();
 
-    // ----------------- Webhook URLs -----------------
-    const restaurantWebhookURL = "https://hooks.slack.com/triggers/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";
-    const simoWebhookURL = "https://hooks.slack.com/triggers/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";
-
-    // ----------------- Functions for sending notifications -----------------
-    // Для ресторанной команды отправляем уведомление только при добавлении заведения.
-    function sendRestaurantNotification(message) {
-      fetch(restaurantWebhookURL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: message })
-      })
-      .then(() => console.log("Restaurant notification sent."))
-      .catch(err => console.error("Restaurant webhook error:", err));
-    }
-    // Для SIMO отправляем подробные уведомления (заменяем переводы строк на " | ").
-    function sendSimoNotification(message) {
-      const plainMessage = message.replace(/\n/g, " | ");
-      fetch(simoWebhookURL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: plainMessage })
-      })
-      .then(() => console.log("SIMO notification sent."))
-      .catch(err => console.error("SIMO webhook error:", err));
-    }
-
-    // -----------------  Add Venue Function -----------------
-    function addEstablishment(establishment) {
-      const newRef = db.ref("establishments").push();
-      establishment.id = newRef.key;
-      establishment.createdAt = new Date().toISOString();
-      establishment.graceExpiresAt = null;
-      establishment.expired = false;
-      establishment.extraTimeAdded = false;
-      
-      newRef.set(establishment, error => {
-        if (!error) {
-          // При добавлении заведения уведомление для ресторана
-          const restaurantMsg = `📢 The ${establishment.name} venue was set admins only until ${new Date(establishment.offlineUntil).toLocaleString()} by ${establishment.addedBy}\nReason: ${establishment.reason}. For further updates please, use https://wo.lt/adminsonly`;
-          // И подробное уведомление для SIMO
-          const simoMsg = `🍽️ [SIMO] Venue: ${establishment.name} is set admins only until ${new Date(establishment.offlineUntil).toLocaleString()}\n🔗 URL: ${establishment.url}\nReason: ${establishment.reason}\nBy: ${establishment.addedBy}`;
-          sendRestaurantNotification(restaurantMsg);
-          sendSimoNotification(simoMsg);
-        } else {
-          console.error("Save error:", error);
-        }
-      });
-    }
-
-    // ----------------- Global store -----------------
-    let currentEstablishments = [];
-
-    // ----------------- Subscribe to DB updates -----------------
-    function subscribeToDashboard() {
-      db.ref("establishments").on("value", snapshot => {
-        const data = snapshot.val();
-        const allEstablishments = data ? Object.values(data) : [];
-        currentEstablishments = allEstablishments;
-        renderDashboards(allEstablishments);
-      });
-    }
-
-    // ----------------- Render Dashboards -----------------
-    function renderDashboards(establishments) {
-      const activeTbody = document.getElementById("activeTable").querySelector("tbody");
-      const historyTbody = document.getElementById("historyTable").querySelector("tbody");
-      
-      activeTbody.innerHTML = "";
-      historyTbody.innerHTML = "";
-      let activeCount = 0;
-      
-      establishments.forEach(est => {
-        if (est.expired) {
-          // Рендерим историю
-          const tr = document.createElement("tr");
-          const tdName = document.createElement("td");
-          tdName.textContent = est.name;
-          tr.appendChild(tdName);
-          const tdBy = document.createElement("td");
-          tdBy.textContent = est.addedBy || "";
-          tr.appendChild(tdBy);
-          const tdReason = document.createElement("td");
-          tdReason.textContent = est.reason || "";
-          tr.appendChild(tdReason);
-          const tdUrl = document.createElement("td");
-          const link = document.createElement("a");
-          link.href = est.url;
-          link.target = "_blank";
-          link.textContent = "Link";
-          tdUrl.appendChild(link);
-          tr.appendChild(tdUrl);
-          const tdOffline = document.createElement("td");
-          tdOffline.textContent = new Date(est.offlineUntil).toLocaleString();
-          tr.appendChild(tdOffline);
-          historyTbody.appendChild(tr);
-        } else {
-          activeCount++;
-          // Рендерим активные заведения
-          const tr = document.createElement("tr");
-          const tdName = document.createElement("td");
-          tdName.textContent = est.name;
-          tr.appendChild(tdName);
-          const tdBy = document.createElement("td");
-          tdBy.textContent = est.addedBy || "";
-          tr.appendChild(tdBy);
-          const tdReason = document.createElement("td");
-          tdReason.textContent = est.reason || "";
-          tr.appendChild(tdReason);
-          const tdUrl = document.createElement("td");
-          const link = document.createElement("a");
-          link.href = est.url;
-          link.target = "_blank";
-          link.textContent = "Link";
-          tdUrl.appendChild(link);
-          tr.appendChild(tdUrl);
-
-          // Прогресс-бар и оставшееся время
-          const tdTimer = document.createElement("td");
-          tdTimer.style.verticalAlign = "middle";
-          const progressContainer = document.createElement("div");
-          progressContainer.className = "progress-container";
-          progressContainer.id = `progressBar-${est.id}`;
-          const progressFill = document.createElement("div");
-          progressFill.className = "progress-fill";
-          progressFill.id = `progressFill-${est.id}`;
-          progressContainer.appendChild(progressFill);
-          const timeText = document.createElement("div");
-          timeText.className = "time-text";
-          timeText.id = `timeText-${est.id}`;
-          tdTimer.appendChild(progressContainer);
-          tdTimer.appendChild(timeText);
-          tr.appendChild(tdTimer);
-          
-          // Кнопки действий
-          const tdAction = document.createElement("td");
-          tdAction.style.display = "flex";
-          tdAction.style.flexDirection = "column";
-          tdAction.style.gap = "8px";
-          const addTimeBtn = document.createElement("button");
-          addTimeBtn.textContent = "Add Extra Time";
-          addTimeBtn.className = "btn";
-          addTimeBtn.addEventListener("click", () => addExtraTime(est.id));
-          tdAction.appendChild(addTimeBtn);
-          if (est.graceExpiresAt) {
-            const setExpBtn = document.createElement("button");
-            setExpBtn.textContent = "Set Expired";
-            setExpBtn.className = "btn";
-            setExpBtn.style.backgroundColor = "#dc3545";
-            setExpBtn.style.marginTop = "5px";
-            setExpBtn.addEventListener("click", () => setExpiredNow(est.id));
-            tdAction.appendChild(setExpBtn);
-          }
-          tr.appendChild(tdAction);
-          activeTbody.appendChild(tr);
-        }
-      });
-      
-      if (activeCount === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 6;
-        td.textContent = "No active venues";
-        tr.appendChild(td);
-        activeTbody.appendChild(tr);
-      }
-    }
-
-    // ----------------- 8) Update timers with grace period and progress bar -----------------
-    function updateTimers() {
-      const now = Date.now();
-      
-      currentEstablishments.forEach(est => {
-        if (est.expired) return;
-        
-        const progressBar = document.getElementById(`progressBar-${est.id}`);
-        const progressFill = document.getElementById(`progressFill-${est.id}`);
-        const timeTextEl = document.getElementById(`timeText-${est.id}`);
-        if (!progressBar || !progressFill || !timeTextEl) return;
-        
-        const offlineUntilTime = new Date(est.offlineUntil).getTime();
-        const createdTime = new Date(est.createdAt).getTime();
-        
-        if (offlineUntilTime > now) {
-          const remainingMs = offlineUntilTime - now;
-          const totalMs = offlineUntilTime - createdTime;
-          let ratio = remainingMs / totalMs;
-          if (ratio < 0) ratio = 0;
-          if (ratio > 1) ratio = 1;
-          progressFill.style.backgroundColor = "#00c2ff";
-          progressFill.style.width = (ratio * 100) + "%";
-          const m = Math.floor(remainingMs / 60000);
-          const s = Math.floor((remainingMs % 60000) / 1000);
-          timeTextEl.textContent = `${m} min ${s} sec`;
-        } else {
-          if (est.extraTimeAdded) {
-            db.ref("establishments/" + est.id).update({ expired: true }, err => {
-              if (!err) {
-                sendSimoNotification(`🍽️ [SIMO] ${est.name} expired immediately after extra time. URL: ${est.url} | By: ${est.addedBy}`);
-              }
-            });
-          } else {
-            if (!est.graceExpiresAt) {
-              const graceExpires = new Date(now + 10 * 60 * 1000).toISOString();
-              db.ref("establishments/" + est.id).update({ graceExpiresAt: graceExpires });
-              sendSimoNotification(`🍽️ [SIMO] ${est.name} offline expired. Grace period (10 min) started. URL: ${est.url} | By: ${est.addedBy}`);
-              est.graceExpiresAt = graceExpires;
-              progressFill.style.backgroundColor = "#ffc107";
-              progressFill.style.width = "100%";
-              timeTextEl.textContent = "Grace: 10 min 0 sec";
-            } else {
-              const graceExpiresTime = new Date(est.graceExpiresAt).getTime();
-              const graceRemaining = graceExpiresTime - now;
-              if (graceRemaining > 0) {
-                const mm = Math.floor(graceRemaining / 60000);
-                const ss = Math.floor((graceRemaining % 60000) / 1000);
-                progressFill.style.backgroundColor = "#ffc107";
-                progressFill.style.width = ((graceRemaining / (10 * 60 * 1000)) * 100) + "%";
-                timeTextEl.textContent = `Grace: ${mm} min ${ss} sec`;
-              } else {
-                db.ref("establishments/" + est.id).update({ expired: true }, error => {
-                  if (!error) {
-                    sendSimoNotification(`🍽️ [SIMO] ${est.name} fully expired. URL: ${est.url} | By: ${est.addedBy}`);
-                  }
-                });
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // ----------------- 9) Add Extra Time -----------------
-    function addExtraTime(id) {
-      const additionalTime = prompt("Enter additional time (in minutes):");
-      if (!additionalTime) return;
-      
-      const ref = db.ref("establishments/" + id);
-      ref.once("value", snapshot => {
-        const est = snapshot.val();
-        if (!est) return;
-        const additionalMs = parseInt(additionalTime, 10) * 60 * 1000;
-        const newOfflineUntil = new Date(new Date(est.offlineUntil).getTime() + additionalMs);
-        ref.update({
-          offlineUntil: newOfflineUntil.toISOString(),
-          expired: false,
-          graceExpiresAt: null,
-          createdAt: new Date().toISOString(),
-          extraTimeAdded: true
-        }, error => {
-          if (!error) {
-            sendSimoNotification(`🍽️ [SIMO] Extra ${additionalTime} min added to ${est.name}. New offline until: ${newOfflineUntil.toLocaleString()} | URL: ${est.url} | By: ${est.addedBy}`);
-            db.ref("establishments").once("value", snap => {
-              const data = snap.val();
-              currentEstablishments = data ? Object.values(data) : [];
-              renderDashboards(currentEstablishments);
-            });
-          } else {
-            console.error("Update error:", error);
-          }
-        });
-      });
-    }
-
-    // ----------------- 10) Set Expired Now -----------------
-    function setExpiredNow(id) {
-      const ref = db.ref("establishments/" + id);
-      ref.update({ expired: true }, error => {
-        if (!error) {
-          ref.once("value", snap => {
-            const est = snap.val();
-            sendSimoNotification(`🍽️ [SIMO] ${est.name} marked as expired. URL: ${est.url} | By: ${est.addedBy}`);
-          });
-        }
-      });
-    }
-
-    // ----------------- 11) Modal Window (Open/Close) -----------------
-    const openModalBtn = document.getElementById("openModalBtn");
+    // Элементы модального окна
+    const addVenueBtn = document.getElementById("addVenueBtn");
     const modalOverlay = document.getElementById("modalOverlay");
-    const modalWindow = document.getElementById("modalWindow");
+    const venueModal = document.getElementById("venueModal");
     const cancelModalBtn = document.getElementById("cancelModalBtn");
-    const addVenueForm = document.getElementById("addVenueForm");
+    const venueForm = document.getElementById("venueForm");
 
-    openModalBtn.addEventListener("click", () => {
-      modalOverlay.style.display = "flex";
+    let isModalOpen = false;
+
+    // Функция открытия модалки
+    function openModal() {
+      modalOverlay.style.display = "flex"; 
       setTimeout(() => {
-        modalWindow.classList.add("show");
+        venueModal.classList.add("show");
       }, 10);
-    });
-
-    cancelModalBtn.addEventListener("click", closeModal);
-
+      isModalOpen = true;
+    }
+    // Функция закрытия модалки
     function closeModal() {
-      modalWindow.classList.remove("show");
+      venueModal.classList.remove("show");
       setTimeout(() => {
         modalOverlay.style.display = "none";
+        isModalOpen = false;
       }, 300);
     }
 
-    // ----------------- 12) Handle Modal Form submission -----------------
-    addVenueForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      
-      // Считываем данные из полей модального окна (обратите внимание, разные id, чтобы не конфликтовали с основной формой)
-      const addedBy = document.getElementById("modalAddedBy").value;
-      const name = document.getElementById("modalName").value;
-      const url = document.getElementById("modalUrl").value;
-      const offlineTimeMinutes = parseInt(document.getElementById("modalOfflineTime").value, 10);
-      const reason = document.getElementById("modalReason").value;
-      
-      const now = new Date();
-      const offlineUntil = new Date(now.getTime() + offlineTimeMinutes * 60 * 1000);
-      
-      const establishment = {
-        addedBy: addedBy,
-        name: name,
-        url: url,
-        offlineUntil: offlineUntil.toISOString(),
-        addedOfflineTime: offlineTimeMinutes,
-        reason: reason,
-        expired: false,
-        graceExpiresAt: null,
-        createdAt: now.toISOString(),
-        extraTimeAdded: false
-      };
-      
-      addEstablishment(establishment);
-      closeModal();
-      addVenueForm.reset();
-    });
+    // Клики
+    addVenueBtn.addEventListener("click", openModal);
+    cancelModalBtn.addEventListener("click", closeModal);
 
-    // ----------------- 13) Initialization -----------------
-    window.addEventListener("load", () => {
-      subscribeToDashboard();
-      setInterval(updateTimers, 1000);
+    // Обработка отправки формы
+    venueForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      // Здесь ваша логика добавления заведения (Firebase push / Slack webhook)
+      // ...
+
+      alert("New venue added (example)!");
+      // Закрываем модалку, очищаем поля
+      closeModal();
+      venueForm.reset();
     });
   </script>
 </body>
