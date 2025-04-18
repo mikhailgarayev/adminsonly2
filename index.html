@@ -22,7 +22,7 @@
     }
     /* Фоновое изображение на всю страницу */
     body {
-      background: url("background.jpg") no-repeat center center fixed;
+      background: url("background.png") no-repeat center center fixed;
       background-size: cover;
       display: flex;
       flex-direction: column;
@@ -42,6 +42,9 @@
       color: #333;
     }
     .top-bar button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       background-color: #00c2ff;
       border: none;
       border-radius: 6px;
@@ -50,6 +53,16 @@
       font-weight: 500;
       padding: 10px 16px;
       transition: background-color 0.2s ease, transform 0.2s ease;
+      font-size: 1rem;
+    }
+    .top-bar button .plus-icon {
+      font-weight: bold;
+      transition: transform 0.3s ease;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    .top-bar button:hover .plus-icon {
+      transform: rotate(90deg);
     }
     .top-bar button:hover {
       background-color: #00a9dc;
@@ -75,6 +88,16 @@
       color: #333;
       font-size: 1.1rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* Иконки в заголовках карточек (используем emoji – можно заменить на SVG) */
+    .icon-active {
+      font-size: 1.2rem;
+    }
+    .icon-history {
+      font-size: 1.2rem;
     }
     /* Таблицы */
     table {
@@ -177,7 +200,7 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    /* Прогресс-бар (если требуется) */
+    /* Прогресс-бар (если потребуется) */
     .progress-container {
       width: 100px;
       height: 8px;
@@ -217,13 +240,18 @@
   <!-- Верхняя панель -->
   <div class="top-bar">
     <h1>Admins only management panel</h1>
-    <button id="addVenueBtn">Add venue</button>
+    <button id="addVenueBtn">
+      <span class="plus-icon">+</span>
+      Add venue
+    </button>
   </div>
 
   <!-- Основной контейнер с таблицами -->
   <div class="container">
     <div class="card">
-      <h2>Active Venues</h2>
+      <h2>
+        <span class="icon-active">✅</span> Active Venues
+      </h2>
       <table id="activeTable">
         <thead>
           <tr>
@@ -236,13 +264,15 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Активные заведения будут здесь (данные из Firebase) -->
+          <!-- Данные Active Venues будут подставляться через JS -->
         </tbody>
       </table>
     </div>
 
     <div class="card">
-      <h2>History</h2>
+      <h2>
+        <span class="icon-history">📜</span> History
+      </h2>
       <table id="historyTable">
         <thead>
           <tr>
@@ -254,7 +284,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Истекшие заведения -->
+          <!-- Данные History будут подставляться через JS -->
         </tbody>
       </table>
     </div>
@@ -293,7 +323,7 @@
   </div>
 
   <script>
-    // ------------- Firebase Initialization -------------
+    // ------------- 1) Firebase Initialization -------------
     const firebaseConfig = {
       apiKey: "AIzaSyBaQYzQmld5VNA_wSI8nDtqENN0TgcNqeA",
       authDomain: "adminsonly.firebaseapp.com",
@@ -306,12 +336,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ------------- Webhook URLs -------------
-    const restaurantWebhookURL = "https://hooks.slack.com/triggers/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";
-    const simoWebhookURL = "https://hooks.slack.com/triggers/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";
+    // ------------- 2) Webhook URLs -------------
+    const restaurantWebhookURL = "https://hooks.slack.com/triggers/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";
+    const simoWebhookURL = "https://hooks.slack.com/triggers/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";
 
-    // ------------- Functions to send notifications -------------
-    // Уведомление в ресторанный канал отправляется только при создании заведения.
+    // ------------- 3) Functions to Send Notifications -------------
+    // Для ресторана: уведомление отправляется только при создании заведения
     function sendRestaurantNotification(message) {
       fetch(restaurantWebhookURL, {
         method: "POST",
@@ -322,9 +352,8 @@
       .then(() => console.log("Restaurant notification sent."))
       .catch(err => console.error("Restaurant webhook error:", err));
     }
-    // Уведомления для SIMO отправляются при всех событиях.
+    // Для SIMO: подробные уведомления (при обновлениях, grace, extra time, set expired)
     function sendSimoNotification(message) {
-      // Для SIMO заменяем переводы строки на разделитель, чтобы избежать ошибки invalid blocks
       const plainMessage = message.replace(/\n/g, " | ");
       fetch(simoWebhookURL, {
         method: "POST",
@@ -336,7 +365,7 @@
       .catch(err => console.error("SIMO webhook error:", err));
     }
 
-    // ------------- Add Venue Function -------------
+    // ------------- 4) Add Venue Function -------------
     function addEstablishment(est) {
       const newRef = db.ref("establishments").push();
       est.id = newRef.key;
@@ -346,12 +375,9 @@
       est.extraTimeAdded = false;
       newRef.set(est, error => {
         if (!error) {
-          const restMsg = `📢 The ${est.name} venue was set admins only until ${new Date(est.offlineUntil).toLocaleString()} by ${est.addedBy}\nReason: ${est.reason}. For further updates please, use https://wo.lt/adminsonly`;
+          const restaurantMsg = `📢 The ${est.name} venue was set admins only until ${new Date(est.offlineUntil).toLocaleString()} by ${est.addedBy}\nReason: ${est.reason}. For further updates please, use https://wo.lt/adminsonly`;
           const simoMsg = `🍽️ [SIMO] Venue: ${est.name} is set admins only until ${new Date(est.offlineUntil).toLocaleString()}\n🔗 URL: ${est.url}\nReason: ${est.reason}\nBy: ${est.addedBy}`;
-          
-          // Отправляем уведомление для ресторана (только один раз при создании)
-          sendRestaurantNotification(restMsg);
-          // Отправляем подробное уведомление для SIMO
+          sendRestaurantNotification(restaurantMsg);
           sendSimoNotification(simoMsg);
         } else {
           console.error("Save error:", error);
@@ -359,10 +385,10 @@
       });
     }
 
-    // ------------- Global store -------------
+    // ------------- 5) Global Store -------------
     let currentEstablishments = [];
 
-    // ------------- Subscribe to Firebase updates -------------
+    // ------------- 6) Subscribe to Firebase Updates -------------
     function subscribeToDashboard() {
       db.ref("establishments").on("value", snapshot => {
         const data = snapshot.val();
@@ -371,31 +397,32 @@
       });
     }
 
-    // ------------- Render tables -------------
+    // ------------- 7) Render Dashboards (Tables) -------------
     function renderDashboards(establishments) {
       const activeTbody = document.getElementById("activeTable").querySelector("tbody");
       const historyTbody = document.getElementById("historyTable").querySelector("tbody");
-      
+
       activeTbody.innerHTML = "";
       historyTbody.innerHTML = "";
       let activeCount = 0;
-      
+
       establishments.forEach(est => {
         if (est.expired) {
+          // Рендер записи для History
           const tr = document.createElement("tr");
-          
+
           const tdName = document.createElement("td");
           tdName.textContent = est.name;
           tr.appendChild(tdName);
-          
+
           const tdBy = document.createElement("td");
           tdBy.textContent = est.addedBy || "";
           tr.appendChild(tdBy);
-          
+
           const tdReason = document.createElement("td");
           tdReason.textContent = est.reason || "";
           tr.appendChild(tdReason);
-          
+
           const tdUrl = document.createElement("td");
           const link = document.createElement("a");
           link.href = est.url;
@@ -403,28 +430,29 @@
           link.textContent = "Link";
           tdUrl.appendChild(link);
           tr.appendChild(tdUrl);
-          
+
           const tdOffline = document.createElement("td");
           tdOffline.textContent = new Date(est.offlineUntil).toLocaleString();
           tr.appendChild(tdOffline);
-          
+
           historyTbody.appendChild(tr);
         } else {
           activeCount++;
+          // Рендер активной записи
           const tr = document.createElement("tr");
-          
+
           const tdName = document.createElement("td");
           tdName.textContent = est.name;
           tr.appendChild(tdName);
-          
+
           const tdBy = document.createElement("td");
           tdBy.textContent = est.addedBy || "";
           tr.appendChild(tdBy);
-          
+
           const tdReason = document.createElement("td");
           tdReason.textContent = est.reason || "";
           tr.appendChild(tdReason);
-          
+
           const tdUrl = document.createElement("td");
           const link = document.createElement("a");
           link.href = est.url;
@@ -432,8 +460,8 @@
           link.textContent = "Link";
           tdUrl.appendChild(link);
           tr.appendChild(tdUrl);
-          
-          // Прогресс бар и оставшееся время
+
+          // Ячейка с прогресс-баром и оставшимся временем
           const tdTimer = document.createElement("td");
           tdTimer.style.verticalAlign = "middle";
           const progressContainer = document.createElement("div");
@@ -449,19 +477,19 @@
           tdTimer.appendChild(progressContainer);
           tdTimer.appendChild(timeText);
           tr.appendChild(tdTimer);
-          
-          // Кнопки действий
+
+          // Ячейка с кнопками действий
           const tdAction = document.createElement("td");
           tdAction.style.display = "flex";
           tdAction.style.flexDirection = "column";
           tdAction.style.gap = "8px";
-          
+
           const addTimeBtn = document.createElement("button");
           addTimeBtn.textContent = "Add Extra Time";
           addTimeBtn.className = "btn";
           addTimeBtn.addEventListener("click", () => addExtraTime(est.id));
           tdAction.appendChild(addTimeBtn);
-          
+
           if (est.graceExpiresAt) {
             const setExpBtn = document.createElement("button");
             setExpBtn.textContent = "Set Expired";
@@ -472,6 +500,7 @@
             tdAction.appendChild(setExpBtn);
           }
           tr.appendChild(tdAction);
+
           activeTbody.appendChild(tr);
         }
       });
@@ -486,7 +515,7 @@
       }
     }
 
-    // ------------- Update timers, grace period, and progress bar -------------
+    // ------------- 8) Update Timers, Grace Period, and Progress Bar -------------
     function updateTimers() {
       const now = Date.now();
       
@@ -550,7 +579,7 @@
       });
     }
 
-    // ------------- Add Extra Time -------------
+    // ------------- 9) Add Extra Time -------------
     function addExtraTime(id) {
       const additionalTime = prompt("Enter additional time (in minutes):");
       if (!additionalTime) return;
@@ -582,7 +611,7 @@
       });
     }
 
-    // ------------- Set Expired Now -------------
+    // ------------- 10) Set Expired Now -------------
     function setExpiredNow(id) {
       const ref = db.ref("establishments/" + id);
       ref.update({ expired: true }, error => {
@@ -595,13 +624,13 @@
       });
     }
 
-    // ------------- Initialization -------------
+    // ------------- 11) Initialization -------------
     window.addEventListener("load", () => {
       subscribeToDashboard();
       setInterval(updateTimers, 1000);
     });
 
-    // ------------- Modal Window Logic -------------
+    // ------------- 12) Modal Window Logic -------------
     const addVenueBtn = document.getElementById("addVenueBtn");
     const modalOverlay = document.getElementById("modalOverlay");
     const venueModal = document.getElementById("venueModal");
@@ -617,7 +646,6 @@
       }, 10);
       isModalOpen = true;
     }
-
     function closeModal() {
       venueModal.classList.remove("show");
       setTimeout(() => {
@@ -625,15 +653,14 @@
         isModalOpen = false;
       }, 300);
     }
-
     addVenueBtn.addEventListener("click", openModal);
     cancelModalBtn.addEventListener("click", closeModal);
 
-    // ------------- Form Handling -------------
+    // ------------- 13) Modal Form Handling -------------
     venueForm.addEventListener("submit", (e) => {
       e.preventDefault();
       
-      // Собираем данные из модального окна (используем уникальные id для модальной формы)
+      // Получаем данные из модальной формы (используем уникальные id для полей)
       const addedBy = document.getElementById("modalAddedBy").value;
       const name = document.getElementById("modalName").value;
       const url = document.getElementById("modalUrl").value;
@@ -656,7 +683,7 @@
         extraTimeAdded: false
       };
       
-      // Добавляем заведение в базу (Firebase)
+      // Добавляем заведение (логика добавления через Firebase)
       addEstablishment(establishment);
       
       // Закрываем модальное окно и очищаем форму
